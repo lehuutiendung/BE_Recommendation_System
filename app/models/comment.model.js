@@ -1,11 +1,17 @@
 const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 /**
- * Bài viết
+ * Bình luận
  */
-const Post = mongoose.model(
-  "Post",
+const Comment = mongoose.model(
+  "Comment",
   new mongoose.Schema({
+    post: {
+        type: schema.Types.ObjectId,
+        ref: 'Post',
+        required: true,
+        trim: true,
+    },
     owner: {
         type: schema.Types.ObjectId,
         ref: 'User',
@@ -27,18 +33,9 @@ const Post = mongoose.model(
           default: null
       },
     }],
-    belongToGroup:{
-        type: schema.Types.ObjectId,
-        ref: 'Group',
-        default: null
-    },
-    react: [{
-        reactID:{ type: schema.Types.ObjectId, ref: 'React' },
-        reactCount: { type: Number }
-    }],
   }, {
     timestamps: true,
   })
 );
 
-module.exports = Post;
+module.exports = Comment;

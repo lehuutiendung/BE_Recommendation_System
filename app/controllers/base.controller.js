@@ -1,6 +1,9 @@
 const AppError = require("../utils/appError");
-const cloudinary = require("../config/cloudinary.config");
+const {cloudinary} = require("../config/cloudinary.config");
 const upload = require("../utils/multer");
+const User = require("../models/user.model");
+
+var convertLanguage = require("../utils/language.convert");
 
 /**
  * Lấy tất cả bản ghi
@@ -10,7 +13,7 @@ const upload = require("../utils/multer");
 exports.getAll = Model => async (req, res, next) => {
     try {
         // Sắp xếp bản ghi theo thời gian gần nhất
-        const doc = await Model.find({}).sort({ "createdAt":-1 });
+        const doc = await Model.find({}).sort({ "updatedAt":-1 });
         
         res.status(200).json({
             status: 'success',
@@ -19,6 +22,26 @@ exports.getAll = Model => async (req, res, next) => {
                 doc
             }
         });
+    } catch (error) {
+        next(error);
+    }
+}
+exports.getPaging = Model => async (req, res, next) => {
+    try {
+        const pageSize = req.body.pageSize;
+        const doc = await Model.find({})
+                                .sort({updatedAt: -1})
+                                .skip(pageSize*req.body.pageIndex - pageSize)
+                                .limit(pageSize);
+        const totalRecord = await Model.count();
+        const totalPage = Math.ceil(totalRecord / pageSize);
+        res.status(200).json({
+            status: 'success',
+            data:{
+                doc,
+                totalPage: totalPage
+            }
+        });                        
     } catch (error) {
         next(error);
     }
@@ -37,9 +60,7 @@ exports.getOne = Model => async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            data:{
-                doc
-            }
+            doc
         });
     } catch (error) {
         next(error);
@@ -72,6 +93,11 @@ exports.createOne = Model => async (req, res, next) => {
  */
 exports.updateOne = Model => async (req, res, next) => {
     try {
+        // Case trường hợp Model là User, update thêm trường userNameEng
+        if(Model === User){
+            req.body.userNameEng = convertLanguage.nonAccentVietnamese(req.body.userName);
+        }
+        
         const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
             new: true,                              //return updated doc
             runValidators: true                     //validate before update
@@ -94,8 +120,10 @@ exports.deleteOne = Model => async (req, res, next) => {
     try {
         const doc = await Model.findByIdAndDelete(req.params.id);
         // Nếu bản ghi có kèm hình ảnh được lưu trên Cloudinary => Xóa kèm hình ảnh trên Cloudinary
-        if(doc.cloudinaryID){
-            await cloudinary.uploader.destroy(doc.cloudinaryID);
+        if(doc.image.length > 0){
+            for(const file of doc.image){
+                await cloudinary.uploader.destroy(file.cloudinaryID);
+            }
         }
         if(!doc){
             return next(new AppError(404, 'Failed', 'No document found!'), req, res, next);

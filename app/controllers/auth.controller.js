@@ -6,7 +6,7 @@ const Role = db.role;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 var validateService = require("../utils/validate");
-
+var convertLanguage = require("../utils/language.convert");
 /**
  * Controller Đăng ký
  * @param {*} req 
@@ -14,8 +14,11 @@ var validateService = require("../utils/validate");
  * @created 11/11/2021
  */
 exports.signUp = (req, res) => {
+  const userNameEng = convertLanguage.nonAccentVietnamese(req.body.userName);
+  console.log(userNameEng);
   const user = new User({
     userName: req.body.userName,
+    userNameEng: userNameEng,
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 8),
     gender: req.body.gender,

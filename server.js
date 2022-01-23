@@ -8,6 +8,14 @@ var cookieParser = require('cookie-parser')
 const { authJwt } = require("./app/middleware/common.service");
 
 const app = express();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server, {
+  cors: {
+    origin: '*',
+  }
+});
+require('./socket')(io)
+
 require('dotenv').config();
 // Cookie parser npm 
 app.use(cookieParser());
@@ -53,11 +61,11 @@ db.mongoose
 /***************************************************************************
  * Routes
  */
-// require('./app/routes/auth.routes')(app);
-// require('./app/routes/user.routes')(app);
 app.use('/api/auth', require('./app/routes/auth.routes'));
 app.use('/api/users',[authJwt.verifyToken], require('./app/routes/user.routes'));
 app.use('/api/posts',[authJwt.verifyToken], require('./app/routes/post.routes'));
+app.use('/api/comments',[authJwt.verifyToken], require('./app/routes/comment.routes'));
+app.use('/api/groups',[authJwt.verifyToken], require('./app/routes/group.routes'));
 
 /***************************************************************************/
 
@@ -190,9 +198,10 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 /***************************************************************************
  * Set port, listen for requests
  */
- const PORT = process.env.PORT || 3000;
- app.listen(PORT, () => {
-   console.log(`Server is running on port ${PORT}.`);
-   console.log(`API Document: http://localhost:${PORT}/api-docs/`);
- });
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}.`);
+  console.log(`API Document: http://localhost:${PORT}/api-docs/`);
+});
+
  /***************************************************************************/

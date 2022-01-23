@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const AppError = require("../utils/appError")
-const postController = require("../controllers/post.controller");
-const Post = require("../models/post.model");
+const commentController = require("../controllers/comment.controller");
+const Comment = require("../models/comment.model");
 const cloudinary = require("../config/cloudinary.config");
 const upload = require("../utils/multer");
 const fs = require("fs");
@@ -10,11 +10,11 @@ module.exports = router;
 
 /** 
  * @swagger 
- * /api/posts:
+ * /api/comments:
  *   post: 
- *      tags: [Post] 
- *      summary: Tạo bài viết
- *      description: Tạo bài viết mới
+ *      tags: [Comment] 
+ *      summary: Tạo bình luận
+ *      description: Tạo bình luận mới
  *      responses:  
  *       201: 
  *         description: Success  
@@ -23,7 +23,7 @@ router.post("/", upload.array('image'), async (req, res, next) => {
     try {
         const urls = [];
         if(req.files.length > 0){
-            const uploader = async (path) => await cloudinary.uploads(path, 'Post');
+            const uploader = async (path) => await cloudinary.uploads(path, 'Comment');
             const files = req.files;
             for( const file of files ){
                 const { path } = file;
@@ -32,15 +32,14 @@ router.post("/", upload.array('image'), async (req, res, next) => {
                 fs.unlinkSync(path);
             }
         }
-        const post = new Post({
+        const comment = new Comment({
+            post: req.body.post,
             owner: req.body.owner,
             content: req.body.content,
             image: urls,
-            belongToGroup: req.body.belongToGroup,
-            react: req.body.react
         })
         try{
-            const doc = await Post.create(post);
+            const doc = await Comment.create(comment);
             res.status(201).json({
                 status: 'Success',
                 data: {
@@ -57,18 +56,18 @@ router.post("/", upload.array('image'), async (req, res, next) => {
 
 /** 
  * @swagger 
- * /api/posts/{:id}:
+ * /api/comments/{:id}:
  *   put: 
- *      tags: [Post] 
- *      summary: Sửa bài viết
- *      description: Sửa bài viết
+ *      tags: [Comment] 
+ *      summary: Sửa bình luận
+ *      description: Sửa bình luận
  *      responses:  
  *       200: 
  *         description: Success  
  */
  router.put("/:id", upload.array('image'), async(req, res, next) => {
     try{
-        const beforeUpdateDoc = await Post.findById(req.params.id);
+        const beforeUpdateDoc = await Comment.findById(req.params.id);
         if(!beforeUpdateDoc){
             return next(new AppError(404, 'Failed', 'No document found!'), req, res, next);
         }
@@ -87,7 +86,7 @@ router.post("/", upload.array('image'), async (req, res, next) => {
             }
         }
         if(req.files.length > 0){
-            const uploader = async (path) => await cloudinary.uploads(path, 'Post');
+            const uploader = async (path) => await cloudinary.uploads(path, 'Comment');
             const files = req.files;
             for( const file of files ){
                 const { path } = file;
@@ -102,14 +101,13 @@ router.post("/", upload.array('image'), async (req, res, next) => {
         }
         
         const data = {
+            post: req.body.post,
             owner: req.body.owner,
             content: req.body.content,
             image: urls,
-            belongToGroup: req.body.belongToGroup,
-            react: req.body.react
         }
 
-        const doc = await Post.findByIdAndUpdate(req.params.id, data, {
+        const doc = await Comment.findByIdAndUpdate(req.params.id, data, {
             new: true,                              //return updated doc
             runValidators: true                     //validate before update
         })
@@ -127,68 +125,52 @@ router.post("/", upload.array('image'), async (req, res, next) => {
 
 /** 
  * @swagger 
- * /api/posts/{:id}:
+ * /api/comments/{:id}:
  *   delete: 
- *      tags: [Post] 
- *      summary: Xóa bài viết
- *      description: Xoá bài viết
+ *      tags: [Comment] 
+ *      summary: Xóa bình luận
+ *      description: Xoá bình luận
  *      responses:  
  *       201: 
  *         description: Success  
  */
-router.delete("/:id", postController.deletePostByID);
+router.delete("/:id", commentController.deleteCommentByID);
 
 /** 
  * @swagger 
- * /api/posts/{:id}:
+ * /api/comments/{:id}:
  *   get: 
- *      tags: [Post] 
- *      summary: Lấy bài viết theo id 
- *      description: Lấy bài viết theo id
+ *      tags: [Comment] 
+ *      summary: Lấy bình luận theo id 
+ *      description: Lấy bình luận theo id
  *      responses:  
  *       201: 
  *         description: Success  
  */
-router.get("/:id", postController.getPostByID);
+router.get("/:id", commentController.getCommentByID);
 
 /** 
  * @swagger 
- * /api/posts/all:
+ * /api/comments/all:
  *   post:
- *      tags: [Post] 
- *      summary: Lấy tất cả bài viết 
- *      description: Lấy tất cả bài viết
+ *      tags: [Comment] 
+ *      summary: Lấy tất cả bình luận 
+ *      description: Lấy tất cả bình luận
  *      responses:  
  *       201: 
  *         description: Success  
  */
-router.post("/all", postController.getPostAll);
-
+router.post("/all", commentController.getCommentAll);
 /** 
  * @swagger 
- * /api/posts/paging:
+ * /api/comments/paging:
  *   post:
- *      tags: [Post] 
- *      summary: Lấy bài viết phân trang 
- *      description: Lấy bài viết phân trang
+ *      tags: [Comment] 
+ *      summary: Lấy phân trang bình luận 
+ *      description: Lấy phân trang bình luận
  *      responses:  
  *       201: 
  *         description: Success  
  */
-router.post("/paging", postController.getPostInNewsFeed);
-
-/** 
- * @swagger 
- * /api/posts/paging/ingroup:
- *   post:
- *      tags: [Post] 
- *      summary: Lấy bài viết phân trang trong group
- *      description: Lấy bài viết phân trang trong group
- *      responses:  
- *       201: 
- *         description: Success  
- */
-router.post("/paging/ingroup", postController.getPostPagingInGroup);
-
-router.post("/paging/inwall", postController.getPostInWall);
+ router.post("/paging", commentController.getCommentPaging);
 
