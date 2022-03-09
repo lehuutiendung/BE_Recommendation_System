@@ -12,6 +12,7 @@ module.exports = {
         try {
             const pageSize = req.body.pageSize;
             const doc = await Comment.find({post: mongoose.Types.ObjectId(req.body.post)})
+                                    .populate('owner', 'userName avatar')
                                     .sort({updatedAt: -1})
                                     .skip(pageSize*req.body.pageIndex - pageSize)
                                     .limit(pageSize);

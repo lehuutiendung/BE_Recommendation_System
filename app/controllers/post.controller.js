@@ -10,26 +10,6 @@ module.exports = {
     getPostAll: Base.getAll(Post),
     getPostByID: Base.getOne(Post),
 
-    getPostPaging: async (req, res, next) => {
-        try {
-            const pageSize = req.body.pageSize;
-            const doc = await Post.find({})
-                                    .sort({updatedAt: -1})
-                                    .skip(pageSize*req.body.pageIndex - pageSize)
-                                    .limit(pageSize);
-            const totalRecord = await Post.count();
-            const totalPage = Math.ceil(totalRecord / pageSize);
-            res.status(200).json({
-                status: 'success',
-                data:{
-                    doc,
-                    totalPage: totalPage
-                }
-            });                        
-        } catch (error) {
-            next(error);
-        }
-    },
     getPostPagingInGroup: async (req, res, next) => {
         try {
             const pageSize = req.body.pageSize;
@@ -58,7 +38,7 @@ module.exports = {
             let user = await User.findById(req.body.userID);
             const doc = await Post.find({
                                     $or: [{
-                                            owner: { $in: [user.friends, req.body.userID] },
+                                            owner: { $in: [...user.friends, req.body.userID] },
                                         }, {
                                             belongToGroup: { $in: user.groups }
                                         }]
@@ -104,6 +84,35 @@ module.exports = {
                     doc,
                     totalPage: totalPage
                 }
+            });                        
+        } catch (error) {
+            next(error);
+        }
+    },
+    /**
+     * Lấy bài post mới nhất 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     */
+    getPostInNewsFeedTop: async (req, res, next) => {
+        try {
+            let user = await User.findById(req.body.userID);
+            const doc = await Post.find({
+                                    $or: [{
+                                            owner: { $in: [user.friends, req.body.userID] },
+                                        }, {
+                                            belongToGroup: { $in: user.groups }
+                                        }]
+                                    })
+                                    .populate('belongToGroup', 'name')
+                                    .sort({updatedAt: -1})
+                                    .skip(0)
+                                    .limit(-1);
+            const totalRecord = await Post.count();
+            res.status(200).json({
+                status: 'success',
+                doc
             });                        
         } catch (error) {
             next(error);

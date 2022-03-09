@@ -192,3 +192,5 @@ router.post("/paging/ingroup", postController.getPostPagingInGroup);
 
 router.post("/paging/inwall", postController.getPostInWall);
 
+router.post("/top-post", postController.getPostInNewsFeedTop);
+
