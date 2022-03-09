@@ -43,7 +43,7 @@ module.exports = {
                                             belongToGroup: { $in: user.groups }
                                         }]
                                     })
-                                    .populate('belongToGroup', 'name')
+                                    .populate('belongToGroup', 'name') 
                                     .sort({updatedAt: -1})
                                     .skip(pageSize*req.body.pageIndex - pageSize)
                                     .limit(pageSize);
