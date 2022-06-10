@@ -1,3 +1,4 @@
+// npm run debug
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -39,7 +40,7 @@ app.use(function(req, res, next) {
 
 const db = require("./app/models/common.model");
 const Role = db.role;
-const React = require("./app/models/react.model");
+
 /****************************************************************************
  * Connect DB
  */
@@ -66,76 +67,34 @@ app.use('/api/users',[authJwt.verifyToken], require('./app/routes/user.routes'))
 app.use('/api/posts',[authJwt.verifyToken], require('./app/routes/post.routes'));
 app.use('/api/comments',[authJwt.verifyToken], require('./app/routes/comment.routes'));
 app.use('/api/groups',[authJwt.verifyToken], require('./app/routes/group.routes'));
+app.use('/api/recommends', require('./app/routes/recommend.routes'));
 
+// Test đầu API gọi sang Python với SPAWN
+// app.post('/api/recommends/recommend-post', function (req, res) {
+//   try {
+//     var spawn = require('child_process').spawn;
+//     var process = spawn('python', ['../MachineLearning/main.py']  
+//     );
+//     process.stdout.on('data', (data) => {
+//         res.write(data.toString());
+//     });
+
+//     process.on('close', (code) => {
+//       if (code !== 0) {
+//         console.log(`grep process exited with code ${code}`);
+//       }
+//       res.end(); // finish the request, `end` not `send`
+//     });
+//   } catch (error) {
+//     console.log(error);
+//   }
+// });
 /***************************************************************************/
 
 /****************************************************************************
- * Tạo Schema Role, React
+ * Tạo Schema Role
  */
 function initial() {
-  React.estimatedDocumentCount((err, count) => {
-    if(!err && count == 0){
-      new React({
-        reactName: "LIKE",
-        reactNumber: 1
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-        console.log("added 'LIKE' to reacts collection");
-      });
-
-      new React({
-        reactName: "LOVE",
-        reactNumber: 2
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-        console.log("added 'LOVE' to reacts collection");
-      });
-
-      new React({
-        reactName: "HAHA",
-        reactNumber: 3
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-        console.log("added 'HAHA' to reacts collection");
-      });
-
-      new React({
-        reactName: "WOW",
-        reactNumber: 4
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-        console.log("added 'WOW' to reacts collection");
-      });
-
-      new React({
-        reactName: "SAD",
-        reactNumber: 5
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-        console.log("added 'SAD' to reacts collection");
-      });
-
-      new React({
-        reactName: "ANGRY",
-        reactNumber: 6
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-        console.log("added 'ANGRY' to reacts collection");
-      });
-    }
-  })
   Role.estimatedDocumentCount((err, count) => {
     if (!err && count === 0) {
       new Role({

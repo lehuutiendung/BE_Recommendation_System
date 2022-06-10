@@ -28,6 +28,7 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.12",
+    "mongoose-transient": "^1.0.4",
     "multer": "^1.4.3",
     "multer-storage-cloudinary": "^4.0.0",
     "socket.io": "^4.4.0",

@@ -78,6 +78,7 @@ router.put("/avatar/:id", upload.single('avatar'), async(req, res, next) => {
 
       res.status(200).json({
           status: 'Success',
+          success: true,
           data: {
               doc
           }
@@ -128,6 +129,7 @@ router.put("/avatar/:id", upload.single('avatar'), async(req, res, next) => {
 
       res.status(200).json({
           status: 'Success',
+          success: true,
           data: {
               doc
           }
