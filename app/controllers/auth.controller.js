@@ -13,10 +13,15 @@ var convertLanguage = require("../utils/language.convert");
  * @param {*} res 
  * @created 11/11/2021
  */
-exports.signUp = (req, res) => {
+exports.signUp = async (req, res) => {
   const userNameEng = convertLanguage.nonAccentVietnamese(req.body.userName);
-  console.log(userNameEng);
+  var userID = 1;
+  var docMaxUserID = await User.findOne().sort({userID:-1}).limit(1);
+  if(docMaxUserID){
+    userID = docMaxUserID.userID + 1;
+  }
   const user = new User({
+    userID: userID,
     userName: req.body.userName,
     userNameEng: userNameEng,
     email: req.body.email,
@@ -25,14 +30,9 @@ exports.signUp = (req, res) => {
     dateOfBirth: req.body.dateOfBirth,
     phoneNumber: req.body.phoneNumber
   });
-  // Validate định dạng email
-  // if(!validateService.isEmailValid(user.email)){
-  //   res.status(400).send({ message: 'Please provide a valid email address.', code_msg: 'INVALID_EMAIL' });
-  //   return;
-  // }
+  
   // Kiểm tra địa chỉ email có tồn tại (có thể gửi mail)
   const valid = validateService.isEmailOnline(user.email);
-  console.log(valid);
   if(!valid){
     res.status(400).send({ message: 'Please provide a valid email address.', code_msg: 'INVALID_EMAIL'});
     return;
@@ -94,11 +94,9 @@ exports.signUp = (req, res) => {
  * @created 11/11/2021
  */
 exports.signIn = (req, res) => {
-  User.findOne({
-    email: req.body.email
-  })
-    .populate("roles", "-__v")
-    .exec((err, user) => {
+  User.findOne({email: req.body.email})
+      .populate("roles", "-__v")
+      .exec((err, user) => {
       if (err) {
         res.status(500).send({ message: err });
         return;
@@ -130,7 +128,11 @@ exports.signIn = (req, res) => {
       }
       res.status(200).send({
         id: user._id,
+        userID: user.userID,
         userName: user.userName,
+        userNameEng: user.userNameEng,
+        avatar: user.avatar,
+        background: user.background,
         email: user.email,
         roles: authorities,
         accessToken: token

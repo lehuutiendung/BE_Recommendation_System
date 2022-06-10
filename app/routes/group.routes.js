@@ -36,7 +36,7 @@ router.post("/", upload.single('background'), async (req, res, next) => {
             name: req.body.name,
             nameGroupEng: nameGroupEng,
             admin: req.body.admin,
-            members: req.body.members,
+            members: req.body.admin,
             general: req.body.general,
             background: url
         })
@@ -155,3 +155,29 @@ router.get("/:id", groupController.getGroupByID);
  *         description: Success  
  */
  router.post("/paging", groupController.getGroupPaging);
+
+/** 
+ * @swagger 
+ * /api/groups/join-group:
+ *   post:
+ *      tags: [Group] 
+ *      summary: Theo dõi nhóm
+ *      description: Theo dõi nhóm
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+ router.post("/join-group", groupController.joinGroup);
+
+ /** 
+ * @swagger 
+ * /api/groups/join-group:
+ *   post:
+ *      tags: [Group] 
+ *      summary: Bỏ theo dõi nhóm
+ *      description: Bỏ theo dõi nhóm
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+  router.post("/out-group", groupController.outGroup);

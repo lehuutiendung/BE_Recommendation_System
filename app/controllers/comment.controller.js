@@ -5,9 +5,17 @@ const { mongoose } = require("../models/common.model");
 module.exports = {
     // Tạo comment: Trong router ( upload file)
     // Cập nhật comment: Trong router
+
+    //Xóa bình luận
     deleteCommentByID: Base.deleteOne(Comment),
+
+    //Lấy tất cả dữ liệu bình luận 
     getCommentAll: Base.getAll(Comment),
+
+    //Lấy dữ liệu 1 bình luận theo ID
     getCommentByID: Base.getOne(Comment),
+
+    //Lấy dữ lieuj paging bình luận
     getCommentPaging: async (req, res, next) => {
         try {
             const pageSize = req.body.pageSize;

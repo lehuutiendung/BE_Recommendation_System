@@ -60,6 +60,7 @@ exports.getOne = Model => async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
+            Success: true,
             doc
         });
     } catch (error) {

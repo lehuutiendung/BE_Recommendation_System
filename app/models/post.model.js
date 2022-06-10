@@ -6,6 +6,12 @@ const schema = mongoose.Schema;
 const Post = mongoose.model(
   "Post",
   new mongoose.Schema({
+    //ID bài viết (int)
+    postID: {
+      type: Number,
+      unique: true,
+      required: true
+    },
     owner: {
         type: schema.Types.ObjectId,
         ref: 'User',
@@ -33,8 +39,8 @@ const Post = mongoose.model(
         default: null
     },
     react: [{
-        reactID:{ type: schema.Types.ObjectId, ref: 'React' },
-        reactCount: { type: Number }
+        userID:{ type: Number, ref: 'User' },
+        reactType: { type: Number }
     }],
   }, {
     timestamps: true,

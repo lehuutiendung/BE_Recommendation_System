@@ -21,6 +21,12 @@ module.exports = router;
  */
 router.post("/", upload.array('image'), async (req, res, next) => {
     try {
+        // Sinh mã ID cho bài viết
+        var postID = 1;
+        var docMaxPostID = await Post.findOne().sort({postID:-1}).limit(1);
+        if(docMaxPostID){
+            postID = docMaxPostID.postID + 1;
+        }
         const urls = [];
         if(req.files.length > 0){
             const uploader = async (path) => await cloudinary.uploads(path, 'Post');
@@ -33,6 +39,7 @@ router.post("/", upload.array('image'), async (req, res, next) => {
             }
         }
         const post = new Post({
+            postID: postID,
             owner: req.body.owner,
             content: req.body.content,
             image: urls,
@@ -102,6 +109,7 @@ router.post("/", upload.array('image'), async (req, res, next) => {
         }
         
         const data = {
+            postID: req.body.postID,
             owner: req.body.owner,
             content: req.body.content,
             image: urls,
@@ -194,3 +202,5 @@ router.post("/paging/inwall", postController.getPostInWall);
 
 router.post("/top-post", postController.getPostInNewsFeedTop);
 
+// Tương tác cảm xúc với bài viết 
+router.post("/post-react", postController.reactToPost);
