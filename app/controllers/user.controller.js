@@ -3,6 +3,8 @@ const User = require("../models/user.model");
 const Post = require("../models/post.model");
 const FriendRequest = require("../models/friend-request.model");
 const RequestEnum = require("../enums/request");
+var convertLanguage = require("../utils/language.convert");
+const {ObjectId} = require('mongodb');
 
 module.exports = {
     allAccess: (req, res) => {
@@ -31,20 +33,22 @@ module.exports = {
     //Cập nhật background user ( route )
 
     //Tìm kiếm user
-    //TODO: Fix search tiếng việt
     filterUser: async (req, res, next) => {
         try {
-            const payload = req.body.name.trim();
+            const payload = convertLanguage.nonAccentVietnamese(req.body.name.trim());
             const pageSize = req.body.pageSize;
             const pageIndex = req.body.pageIndex;
+
+            // payload = convertLanguage.nonAccentVietnamese(payload);
+            // const doc = await User.find({ $text: {$search: payload } })
             const doc = await User.find({ userNameEng : {$regex: new RegExp(payload, 'i')} })
-                                    .skip(pageSize*pageIndex - pageSize)
-                                    .limit(pageSize);
+                                    // .skip(pageSize*pageIndex - pageSize)
+                                    // .limit(pageSize);
             if(!doc){
                 return next(new AppError(404, 'Failed', 'No document found!'), req, res, next);
             }
             
-            const totalRecord = await User.find({ userNameEng : {$regex: new RegExp(payload, 'i')} }).count();
+            const totalRecord = await User.find({ $text: {$search: payload } }).count();
             const totalPage = Math.ceil(totalRecord / pageSize);
 
             res.status(200).json({
@@ -57,13 +61,23 @@ module.exports = {
         }
     },
 
-    //Filter trong top bạn bè của một người dùng
+    //Filter và paging danh sách bạn bè của người dùng
     filterFriend: async (req, res, next) => {
         try {
             const pageSize = req.body.pageSize;
             const pageIndex = req.body.pageIndex;
-            const doc = await User.findById(req.body.userID)
-                                    .populate({ path:'friends', select: ['avatar', 'friends', 'userName', 'userNameEng', '_id']})
+            const userID = req.body.userID;
+            const payload = convertLanguage.nonAccentVietnamese(req.body.userName.trim());
+            const doc = await User.findById(userID)
+                                    .populate({ 
+                                        path:'friends', 
+                                        select: ['_id', 'userName', 'userNameEng', 'avatar'],
+                                        match: {
+                                            $or: [
+                                                { userNameEng : {$regex: new RegExp(payload, 'i')} }
+                                            ]
+                                        }
+                                    })
                                     .select('userName email friends')
                                     .skip(pageSize*pageIndex - pageSize)
                                     .limit(pageSize);
@@ -213,6 +227,54 @@ module.exports = {
         }
     },
 
+    // Hủy kết bạn
+    deleteFriend: async(req, res, next) => {
+        try {
+            let ownerID = req.body.ownerID;
+            let friendID = req.body.friendID;
+            const docOwner = await User.findByIdAndUpdate(ownerID, {
+                $pull: {'friends': ObjectId(friendID) } 
+            })
+            if(!docOwner){
+                res.status(200).json({
+                    status: 'Success',
+                    success: false,
+                    code: "USER_NOT_EXIST",
+                    message: "This user does not exist"
+                }) 
+            }
+            const docFriend = await User.findByIdAndUpdate(friendID, {
+                $pull: {'friends': ObjectId(ownerID) } 
+            })
+            if(!docFriend){
+                res.status(200).json({
+                    status: 'Success',
+                    success: false,
+                    code: "USER_NOT_EXIST",
+                    message: "This user does not exist"
+                }) 
+            }
+            const docFriendReq = await FriendRequest.findOneAndDelete({
+                $or:[
+                    {
+                        userRecipientID: ownerID,
+                        userRequestID: friendID
+                    },
+                    {
+                        userRecipientID: friendID,
+                        userRequestID: ownerID
+                    }
+                ]
+            })
+            res.status(200).json({
+                status: 'Success',
+                success: true
+            })
+        } catch (error) {
+            next(error);
+        }
+    },
+
     // Lấy những thông báo chưa xem
     getNotificationAddFriend: async (req, res, next) => {
         try {
@@ -246,4 +308,20 @@ module.exports = {
         }
     },
 
+    // Lấy tất cả trạng thái online, offline của bạn bè
+    getStatusOfFriend: async(req, res, next) => {
+        try {
+            let userID = req.body.userID;
+            const doc = await User.findById(userID).populate("friends", "userID avatar userName userNameEng isOnline");
+            // Sắp xếp danh sách bạn bè online lên đầu tiên
+            let lstFriends = doc.friends.sort((x, y) => y.isOnline - x.isOnline);
+            res.status(200).json({
+                status: 'Success',
+                success: true,
+                lstFriends
+            })
+        } catch (error) {
+            next(error);
+        }
+    },
 }

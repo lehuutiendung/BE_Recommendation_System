@@ -68,7 +68,8 @@ app.use('/api/posts',[authJwt.verifyToken], require('./app/routes/post.routes'))
 app.use('/api/comments',[authJwt.verifyToken], require('./app/routes/comment.routes'));
 app.use('/api/groups',[authJwt.verifyToken], require('./app/routes/group.routes'));
 app.use('/api/recommends', require('./app/routes/recommend.routes'));
-
+app.use('/api/emails', require('./app/routes/email.routes'));
+app.use('/api/chats', require('./app/routes/chat.routes'));
 // Test đầu API gọi sang Python với SPAWN
 // app.post('/api/recommends/recommend-post', function (req, res) {
 //   try {

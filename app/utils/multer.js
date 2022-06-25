@@ -9,7 +9,13 @@ module.exports = multer({
         if(ext !== ".jpg" && ext !== ".JPG" && 
         ext != ".jpeg" && ext != ".JPEG" && 
         ext != ".png" && ext != ".PNG" &&
-        ext != ".gif" && ext != ".GIF"){
+        ext != ".gif" && ext != ".GIF" &&
+        ext != ".mov" && ext != ".mp4" &&
+        ext != ".m4p" && ext != ".mpg" &&
+        ext != ".mp2" && ext != ".mpeg" &&
+        ext != ".mpe" && ext != ".m4v" &&
+        ext != ".avi" && ext != ".flv" &&
+        ext != ".wmv"){
             cb(new Error("File type is not supported"), false);
             return;
         }

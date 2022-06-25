@@ -32,6 +32,10 @@ const Post = mongoose.model(
           type: String,
           default: null
       },
+      resourceType:{
+          type: String,
+          default: null
+      }
     }],
     belongToGroup:{
         type: schema.Types.ObjectId,

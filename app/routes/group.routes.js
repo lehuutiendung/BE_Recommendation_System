@@ -181,3 +181,29 @@ router.get("/:id", groupController.getGroupByID);
  *         description: Success  
  */
   router.post("/out-group", groupController.outGroup);
+
+/** 
+ * @swagger 
+ * /api/groups/get-all-member:
+ *   post:
+ *      tags: [Group] 
+ *      summary: Lấy tất cả thành viên của nhóm
+ *      description: Lấy tất cả thành viên của nhóm
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+  router.post("/filter-member", groupController.filterMember);
+
+/** 
+ * @swagger 
+ * /api/groups/filter-group:
+ *   post:
+ *      tags: [Group] 
+ *      summary: Tìm kiếm nhóm
+ *      description: Tìm kiếm nhóm
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+  router.post("/filter-group", groupController.filterGroup);

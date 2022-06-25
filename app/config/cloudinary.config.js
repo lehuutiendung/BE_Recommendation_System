@@ -13,7 +13,8 @@ module.exports = {
             cloudinary.uploader.upload(file, (result) => {
                 resolve({
                     imageURL: result.secure_url,
-                    cloudinaryID: result.public_id
+                    cloudinaryID: result.public_id,
+                    resourceType: result.resource_type
                 })
             }, {
                 resource_type: "auto",

@@ -1,4 +1,5 @@
 const socketController = require('./app/controllers/socket.controller')
+const chatController = require('./app/controllers/chat.controller')
 const User = require('./app/models/user.model')
 module.exports = io => {
     io.on("connection", async socket => {
@@ -49,7 +50,18 @@ module.exports = io => {
                 throw error
             }                                    
         })
-
+        
+        socket.on('send-message', async(data) => {
+            try {
+                await chatController.sendMessage(data);
+                let userSend = await User.findById(data.fromUserID);
+                let userReceive = await User.findById(data.toUserID);
+                io.to(`${userSend.socketID}`).emit('receive-message', data);
+                io.to(`${userReceive.socketID}`).emit('receive-message', data);
+            } catch (error) {
+                throw error;
+            }
+        })
         
     })
 }

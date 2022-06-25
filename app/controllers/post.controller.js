@@ -18,7 +18,11 @@ module.exports = {
             // Nếu bản ghi có kèm hình ảnh được lưu trên Cloudinary => Xóa kèm hình ảnh trên Cloudinary
             if(doc.image.length > 0){
                 for(const file of doc.image){
-                    await cloudinary.uploader.destroy(file.cloudinaryID);
+                    if(file.resourceType.includes('image')){
+                        await cloudinary.uploader.destroy(file.cloudinaryID);
+                    }else{
+                        await cloudinary.uploader.destroy(file.cloudinaryID, {resource_type : 'video'});
+                    }
                 }
             }
             if(!doc){

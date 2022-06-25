@@ -243,4 +243,29 @@ router.post("/request-acceptfriend/:id", userController.sendRequestAcceptFriend)
  */
 router.post("/request-rejectfriend/:id", userController.sendRequestRejectFriend);
 
+/** 
+ * @swagger 
+ * /api/users/delete-friend:
+ *   post: 
+ *      tags: [User] 
+ *      summary: Hủy kết bạn
+ *      description: Hủy kết bạn
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+router.post("/delete-friend", userController.deleteFriend);
+
+/** 
+ * @swagger 
+ * /api/users/get-status-friends:
+ *   post: 
+ *      tags: [User] 
+ *      summary: Lấy trạng thái online/offline của bạn bè
+ *      description: Lấy trạng thái online/offline của bạn bè
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+router.post("/get-status-friends", userController.getStatusOfFriend);
 module.exports = router;

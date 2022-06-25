@@ -4,6 +4,7 @@ const User = require("../models/user.model");
 const Base = require("./base.controller");
 const {cloudinary} = require("../config/cloudinary.config");
 const { mongoose } = require("../models/common.model");
+var convertLanguage = require("../utils/language.convert");
 
 module.exports = {
     // Tạo group: Trong router ( upload file)
@@ -177,5 +178,51 @@ module.exports = {
         } catch (error) {
             next(error);
         }
-    } 
+    },
+
+    //Lấy tất cả thành viên của một nhóm - filter thành viên nhóm
+    filterMember: async(req, res, next) => {
+        try {
+            let groupID = req.body.groupID;
+            const payload = convertLanguage.nonAccentVietnamese(req.body.userName.trim());
+            let data = await Group.findById(groupID).populate({
+                path: "members", 
+                select: 'userName userNameEng avatar',
+                match: {
+                    $or: [
+                        { userNameEng : {$regex: new RegExp(payload, 'i')} }
+                    ]
+                }
+            });
+            data = data.members;
+            res.status(200).json({
+                status: 'Success',
+                success: true,
+                data
+            })
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    //Tìm kiếm nhóm
+    filterGroup: async(req, res, next) => {
+        try {
+            //Convert tiêng việt => tiếng anh (bỏ các kí tự)
+            const payload = convertLanguage.nonAccentVietnamese(req.body.name.trim());
+            console.log(payload);
+            const doc = await Group.find({ nameGroupEng : {$regex: new RegExp(payload, 'i')} })
+            if(!doc){
+                return next(new AppError(404, 'Failed', 'No document found!'), req, res, next);
+            }
+            
+            res.status(200).json({
+                status: 'Success',
+                success: true,
+                doc,
+            })
+        } catch (error) {
+            next(error);
+        }
+    }
 }
