@@ -2,5 +2,6 @@
 module.exports = {
     REQUESTED: 1,
     ACCEPTED: 2,
-    REJECTED: 3
+    REJECTED: 3,
+    NONE: 4
 }

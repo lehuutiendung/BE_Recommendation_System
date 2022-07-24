@@ -193,16 +193,16 @@ router.post("/filter-friend", userController.filterFriend);
 
 /** 
  * @swagger 
- * /api/users/request-addfriend:
+ * /api/users/save-request-noti:
  *   post: 
  *      tags: [User] 
- *      summary: Gửi yêu cầu kết bạn
- *      description: Gửi yêu cầu kết bạn
+ *      summary: Lưu thông báo, các yêu cầu
+ *      description: Lưu thông báo, các yêu cầu
  *      responses:  
  *       201: 
  *         description: Success  
  */
-router.post("/request-addfriend", userController.sendRequestAddFriend);
+router.post("/save-request-noti", userController.saveNotification);
 
 /** 
  * @swagger 
@@ -215,7 +215,7 @@ router.post("/request-addfriend", userController.sendRequestAddFriend);
  *       200: 
  *         description: Success  
  */
- router.post("/notification-add-friend", userController.getNotificationAddFriend);
+ router.post("/notification-not-seen", userController.getNotificationNotSeen);
 
 /** 
  * @swagger 
@@ -268,4 +268,18 @@ router.post("/delete-friend", userController.deleteFriend);
  *         description: Success  
  */
 router.post("/get-status-friends", userController.getStatusOfFriend);
+
+/** 
+ * @swagger 
+ * /api/users/update-status-notification:
+ *   post: 
+ *      tags: [User] 
+ *      summary: Cập nhật trạng thái đã xem của thông báo
+ *      description: Cập nhật trạng thái đã xem của thông báo
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+router.post("/update-status-notification", userController.updateStatusNoti);
+
 module.exports = router;

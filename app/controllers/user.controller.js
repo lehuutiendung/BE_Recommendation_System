@@ -1,7 +1,8 @@
 const Base = require("./base.controller");
 const User = require("../models/user.model");
 const Post = require("../models/post.model");
-const FriendRequest = require("../models/friend-request.model");
+const Group = require("../models/group.model");
+const Notification = require("../models/notification.model");
 const RequestEnum = require("../enums/request");
 var convertLanguage = require("../utils/language.convert");
 const {ObjectId} = require('mongodb');
@@ -23,7 +24,52 @@ module.exports = {
         res.status(200).send("Moderator Content.");
     },
     //Lấy data user theo id
-    getUser: Base.getOne(User),
+    getUser: async (req, res, next) => {
+        try {
+            let data = await User.findById(req.params.id);
+            if(!data){
+                res.status(200).json({
+                    Success: false,
+                    code: "USER_NOT_EXISTS",
+                    message: "This user currently does not exist"
+                })
+                return;
+            }
+
+            let doc = {
+                _id: data._id,
+                avatar: data.avatar,
+                background: data.background,
+                createdAt: data.createdAt,
+                dateOfBirth: data.dateOfBirth,
+                email: data.email,
+                ethnic: data.ethnic,
+                friends: data.friends,
+                gender: data.gender,
+                groups: data.groups,
+                hometown: data.hometown,
+                isOnline: data.isOnline,
+                nationality: data.nationality,
+                phoneNumber: data.phoneNumber,
+                quotes: data.quotes,
+                religion: data.religion,
+                socketID: data.socketID,
+                updatedAt: data.updatedAt,
+                userID: data.userID,
+                userName: data.userName,
+                userNameEng: data.userNameEng
+            }
+
+            res.status(200).json({
+                status: 'success',
+                Success: true,
+                doc
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    },
     
     //Cập nhật các trường thông tin cơ bản của user
     updateUser: Base.updateOne(User),
@@ -124,36 +170,47 @@ module.exports = {
         }
     },
 
-    // Gửi request kết bạn
-    sendRequestAddFriend: async (req, res, next) => {
+    // Lưu thông báo và các yêu cầu
+    saveNotification: async (req, res, next) => {
         try {
             const userRequestID = req.body.userRequestID;
             const userRecipientID = req.body.userRecipientID;
-            
-            const existsDoc = await FriendRequest.find({
-                userRecipientID: userRecipientID,
-                userRequestID: userRequestID
-            })
-            if(existsDoc.length > 0){
-                res.status(200).json({
-                    status: 'Document already exists',
-                    data: {
-                        existsDoc
-                    }
-                });
-                return;
+            const typeNoti = req.body.typeNoti;
+            const status = req.body.status;
+            const postID = req.body.postID;
+
+            //Check tồn tại request đối với gửi lời mời kết bạn
+            if(typeNoti == 0){
+                const existsDoc = await Notification.find({
+                    userRecipientID: userRecipientID,
+                    userRequestID: userRequestID,
+                    typeNoti: 0
+                })
+                if(existsDoc.length > 0){
+                    res.status(200).json({
+                        status: 'Document already exists',
+                        success: false,
+                        data: {
+                            existsDoc
+                        }
+                    });
+                    return;
+                }
             }
 
-            const friendRequest = new FriendRequest({
+            const notification = new Notification({
                 userRequestID: userRequestID,
                 userRecipientID: userRecipientID,
-                status: RequestEnum.REQUESTED,
-                seen: false
+                status: status,
+                seen: false,
+                typeNoti: typeNoti,
+                postID: postID
             })
 
-            const doc = await FriendRequest.create(friendRequest);
+            const doc = await Notification.create(notification);
             res.status(201).json({
                 status: 'Success',
+                success: true,
                 data: {
                     doc
                 }
@@ -166,7 +223,7 @@ module.exports = {
     // Gửi request đồng ý kết bạn
     sendRequestAcceptFriend: async (req, res, next) => {
         try {
-            const doc = await FriendRequest.findByIdAndUpdate(req.params.id, {
+            const doc = await Notification.findByIdAndUpdate(req.params.id, {
                 $set:{
                     status: RequestEnum.ACCEPTED,
                     seen: true
@@ -213,7 +270,7 @@ module.exports = {
     // Request từ chối lời mời kết bạn
     sendRequestRejectFriend: async (req, res, next) => {
         try {
-            const doc = await FriendRequest.findByIdAndDelete(req.params.id);
+            const doc = await Notification.findByIdAndDelete(req.params.id);
             if(!doc){
                 return next(new AppError(404, 'Failed', 'No document found!'), req, res, next);
             }
@@ -254,15 +311,17 @@ module.exports = {
                     message: "This user does not exist"
                 }) 
             }
-            const docFriendReq = await FriendRequest.findOneAndDelete({
+            const docFriendReq = await Notification.findOneAndDelete({
                 $or:[
                     {
                         userRecipientID: ownerID,
-                        userRequestID: friendID
+                        userRequestID: friendID,
+                        typeNoti: 0
                     },
                     {
                         userRecipientID: friendID,
-                        userRequestID: ownerID
+                        userRequestID: ownerID,
+                        typeNoti: 0
                     }
                 ]
             })
@@ -276,14 +335,21 @@ module.exports = {
     },
 
     // Lấy những thông báo chưa xem
-    getNotificationAddFriend: async (req, res, next) => {
+    getNotificationNotSeen: async (req, res, next) => {
         try {
-            const doc = await FriendRequest.find(
-                {
-                    userRecipientID: req.body.userID,
-                    status: 1,                      //Trạng thái requested
-                    seen: false
-                }).populate('userRequestID')
+            const doc = await Notification.find({   
+                $or:[{
+                        //Thông báo về kết bạn
+                        userRecipientID: req.body.userID,
+                        status: 1,                      //Trạng thái requested
+                        seen: false
+                    },
+                    {
+                        //Các thông báo khác
+                        userRecipientID: req.body.userID,
+                        status: 4                       
+                    }]
+                }).populate('userRequestID').sort({updatedAt: -1});
             let dataRes = [];
             doc.forEach(element => {
                 let objectNotify = {
@@ -294,6 +360,8 @@ module.exports = {
                     userName: element.userRequestID.userName,
                     seen: element.seen,
                     status: element.status,
+                    typeNoti: element.typeNoti,
+                    postID: element.postID,
                     createdAt: element.createdAt,
                     updatedAt: element.updatedAt
                 }
@@ -308,20 +376,59 @@ module.exports = {
         }
     },
 
-    // Lấy tất cả trạng thái online, offline của bạn bè
+    
+    // Lấy tất cả trạng thái online, offline của bạn bè và các nhóm người dùng tham gia
     getStatusOfFriend: async(req, res, next) => {
         try {
             let userID = req.body.userID;
-            const doc = await User.findById(userID).populate("friends", "userID avatar userName userNameEng isOnline");
+            const doc = await User.findById(userID).populate("friends", "userID avatar userName userNameEng isOnline").populate('groups', 'name nameGroupEng background general');
+            // Lấy danh sách group người dùng đã tạo
+            const docGroupOwner = await Group.find({ admin: userID }).select('name nameGroupEng background general');
             // Sắp xếp danh sách bạn bè online lên đầu tiên
             let lstFriends = doc.friends.sort((x, y) => y.isOnline - x.isOnline);
+            // Merge 2 list: list người dùng tham gia + list người dùng tạo
+            let lstGroups = [...doc.groups,...docGroupOwner];
             res.status(200).json({
                 status: 'Success',
                 success: true,
-                lstFriends
+                lstFriends,
+                lstGroups
             })
         } catch (error) {
             next(error);
         }
     },
+
+    // Cập nhật trạng thái đã xem thông báo
+    updateStatusNoti: async(req, res, next) => {
+        try {
+            const doc = await Notification.findOneAndUpdate({ _id: req.body.notiID }, {
+                $set:{
+                    seen: true
+                }
+            }, {
+                new: true,                              //return updated doc
+                runValidators: true                     //validate before update
+            })
+
+            if(!doc){
+                res.status(200).json({
+                    status: 'Success',
+                    success: false,
+                    code: "POST_NOT_EXIST",
+                    message: "This post does not exist"
+                })
+                return;
+            }
+
+            res.status(200).json({
+                status: 'Success',
+                success: true,
+                doc
+            })
+        } catch (error) {
+            throw error;
+        }
+    },
+
 }

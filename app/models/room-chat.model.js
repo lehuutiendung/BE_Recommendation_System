@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const RoomChat = mongoose.model(
   "RoomChat",
   new mongoose.Schema({
-    // email của người gửi yêu cầu
+    // Thành viên trong group chat
     members: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"

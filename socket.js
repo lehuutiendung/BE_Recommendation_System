@@ -1,6 +1,8 @@
 const socketController = require('./app/controllers/socket.controller')
 const chatController = require('./app/controllers/chat.controller')
 const User = require('./app/models/user.model')
+const Notification = require("./app/models/notification.model");
+
 module.exports = io => {
     io.on("connection", async socket => {
         console.log('socket connect BE: ', socket.id);
@@ -31,7 +33,7 @@ module.exports = io => {
         })
 
         /**
-         * Socket: Gửi thông báo
+         * Socket: Gửi thông báo lời mời kết bạn
          */
         socket.on('send_notification', async (data) => {
             try {
@@ -43,14 +45,30 @@ module.exports = io => {
                     userName: sender.userName,
                     avatar: sender.avatar.cloudinaryID,
                     userRecipientID: data.userRecipientID,
-                    typeNotification: data.typeNotification,
+                    typeNoti: data.typeNoti,
+                    seen: false
                 }
                 io.to(`${receiver.socketID}`).emit('get_notification', dataEmit);
             } catch (error) {
                 throw error
             }                                    
         })
+
+        /**
+         * Socket: gửi thông báo bình luận bài viết
+         */
+        socket.on('notification', async(data) => {
+            try {
+                let receiver = await User.findById(data.userRecipientID);
+                io.to(`${receiver.socketID}`).emit('notification', data);
+            } catch (error) {
+                throw error
+            }
+        })
         
+        /**
+         * Socket gửi tin nhắn
+         */
         socket.on('send-message', async(data) => {
             try {
                 await chatController.sendMessage(data);
@@ -58,6 +76,28 @@ module.exports = io => {
                 let userReceive = await User.findById(data.toUserID);
                 io.to(`${userSend.socketID}`).emit('receive-message', data);
                 io.to(`${userReceive.socketID}`).emit('receive-message', data);
+            } catch (error) {
+                throw error;
+            }
+        })
+
+        /**
+         * Socket đang viết tin nhắn
+         */
+        socket.on('typing', async(data) => {
+            try {
+                io.emit('typing', data);
+            } catch (error) {
+                throw error;
+            }
+        })
+
+        /**
+         * Socket ngừng viết tin nhắn
+         */
+        socket.on('stopTyping', async(data) => {
+            try {
+                io.emit('typing', data);
             } catch (error) {
                 throw error;
             }
