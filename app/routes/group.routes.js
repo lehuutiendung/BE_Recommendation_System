@@ -141,7 +141,7 @@ router.delete("/:id", groupController.deleteGroupByID);
  *       201: 
  *         description: Success  
  */
-router.get("/:id", groupController.getGroupByID);
+router.post("/group-detail", groupController.getGroupByID);
 
 /** 
  * @swagger 

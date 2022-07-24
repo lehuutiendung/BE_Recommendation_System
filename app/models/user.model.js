@@ -44,7 +44,8 @@ const User = mongoose.model(
     },
     //Giới tính { 0: Nam, 1: Nữ}
     gender: {
-      type: String,
+      type: Number,
+      default: 0
     },
     //Ngày sinh
     dateOfBirth: {

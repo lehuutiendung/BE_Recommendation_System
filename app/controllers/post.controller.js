@@ -44,7 +44,28 @@ module.exports = {
     getPostAll: Base.getAll(Post),
 
     //Lấy dữ liệu bài viết theo ID
-    getPostByID: Base.getOne(Post),
+    getPostByID: async (req, res, next) => {
+        try {
+            const doc = await Post.findById(req.params.id)
+                                    .populate('owner', 'userName avatar')
+                                    .populate('belongToGroup', 'name') ;
+            if(!doc){
+                res.status(200).json({
+                    success: false,
+                    log: "No document found!",
+                    data: null
+                })
+            }
+    
+            res.status(200).json({
+                status: 'success',
+                success: true,
+                doc
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
 
     //Paging bài viết trong group
     getPostPagingInGroup: async (req, res, next) => {

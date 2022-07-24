@@ -5,6 +5,7 @@ const Base = require("./base.controller");
 const {cloudinary} = require("../config/cloudinary.config");
 const { mongoose } = require("../models/common.model");
 var convertLanguage = require("../utils/language.convert");
+const {ObjectId} = require('mongodb');
 
 module.exports = {
     // Tạo group: Trong router ( upload file)
@@ -14,14 +15,17 @@ module.exports = {
     // getGroupByID: Base.getOne(Group),
     getGroupByID: async (req, res, next) => {
         try {
-            const doc = await Group.findById(req.params.id).populate('admin', 'userName avatar');
+            const doc = await Group.findOne({ _id: req.body.groupID }).populate('admin', 'userName avatar');
             if(!doc){
+                const docUser = await User.findOneAndUpdate({ _id : req.body.userID }, {
+                    $pull: {'groups': ObjectId(req.body.groupID) } 
+                })
+
                 res.status(200).json({
                     success: false,
                     log: "No document found!",
                     data: null
                 })
-                // return next( new AppError(404, 'Failed', 'No document found!'), req, res, next);
             }
     
             res.status(200).json({
