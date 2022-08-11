@@ -282,4 +282,17 @@ router.post("/get-status-friends", userController.getStatusOfFriend);
  */
 router.post("/update-status-notification", userController.updateStatusNoti);
 
+/** 
+ * @swagger 
+ * /api/users/change-password-setting:
+ *   post: 
+ *      tags: [User] 
+ *      summary: Thiết lập - thay đổi mật khẩu
+ *      description: Thiết lập - thay đổi mật khẩu
+ *      responses:  
+ *       200: 
+ *         description: Success  
+ */
+router.post("/change-password-setting", userController.changePasswordSetting);
+
 module.exports = router;
