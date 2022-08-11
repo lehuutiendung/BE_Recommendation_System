@@ -6,6 +6,7 @@ const Notification = require("../models/notification.model");
 const RequestEnum = require("../enums/request");
 var convertLanguage = require("../utils/language.convert");
 const {ObjectId} = require('mongodb');
+const bcrypt = require("bcryptjs");
 
 module.exports = {
     allAccess: (req, res) => {
@@ -431,4 +432,47 @@ module.exports = {
         }
     },
 
+    //Thiết lập - thay đổi mật khẩu
+    changePasswordSetting: async(req, res, next) => {
+        try {
+            const currentPassword = req.body.currentPassword;
+            const newPassword = req.body.newPassword;
+            const userID = req.body.userID;
+            var docUser = await User.findById(userID);
+            var passwordIsValid = bcrypt.compareSync(
+                currentPassword,
+                docUser.password
+            );
+            if(currentPassword == "" || newPassword == ""){
+                // Nhập thiếu các trường bắt buộc
+                res.status(200).json({
+                    status: 'Success',
+                    success: false,
+                    code: "EMPTY_VALUE"
+                })
+                return;
+            }else if(!passwordIsValid){
+                // Mật khẩu hiện tại không đúng
+                res.status(200).json({
+                    status: 'Success',
+                    success: false,
+                    code: "PASSWORD_INVALID"
+                })
+                return;
+            }else{
+                const doc = await User.findByIdAndUpdate(userID, {
+                    $set:{
+                        password: bcrypt.hashSync(newPassword, 8)
+                    }
+                })
+    
+                res.status(200).json({
+                    status: 'Success',
+                    success: true
+                })
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
 }

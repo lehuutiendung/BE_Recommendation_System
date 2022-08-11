@@ -45,10 +45,17 @@ module.exports = {
             const pageSize = req.body.pageSize;
             const pageIndex = req.body.pageIndex;
             const userID = req.body.userID;
-            var doc = await Group.find({ nameGroupEng : {$regex: new RegExp(payload, 'i')} })
-                                    .sort({'_id': -1})
-                                    .skip(pageSize*pageIndex - pageSize)
-                                    .limit(pageSize);
+            if(pageIndex > 0){
+                // Phân trang
+                var doc = await Group.find({ nameGroupEng : {$regex: new RegExp(payload, 'i')} })
+                                        .sort({'_id': -1})
+                                        .skip(pageSize*pageIndex - pageSize)
+                                        .limit(pageSize);
+            }else{
+                // Get all
+                var doc = await Group.find({ nameGroupEng : {$regex: new RegExp(payload, 'i')} })
+                                        .sort({'_id': -1})
+            }
             if(!doc){
                 return next(new AppError(404, 'Failed', 'No document found!'), req, res, next);
             }
